@@ -2,6 +2,8 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Login from '../routes/loginPage/loginPage';
 import SignUp from '../routes/loginPage/signupPage';
+import HomePage from '../routes/homePage/homePage';
+import ProtectedRoute from './ProtectedRoute';
 
 const router = createBrowserRouter([
   {
@@ -11,6 +13,9 @@ const router = createBrowserRouter([
         Home Page on the way till then play with login page ()=&gt;route to
         login page :)
       </div>
+      <ProtectedRoute>
+        <HomePage />
+      </ProtectedRoute>
     ),
   },
   {
