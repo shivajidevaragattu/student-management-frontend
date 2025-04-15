@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import {useForm } from "react-hook-form"
 import { z } from "zod"
+import axios from "axios"
+import { useNavigate } from 'react-router-dom'
 import { Mail, Lock, ArrowRight, Laptop } from "lucide-react"
-
 import { Alert, AlertDescription } from "../../components/ui/alert"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
@@ -25,6 +26,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState("")
 
+  const navigate = useNavigate();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,16 +35,35 @@ const Login = () => {
     },
   })
 
-  const handleLogin = (values: FormValues) => {
+  const handleLogin =async (values: FormValues) => {
     setServerError("")
     setIsLoading(true)
+    try{
+      const response = await axios.post(`http://localhost:${process.env.PORT as string}/api/login`, values)
+      if(response.status === 200) {
+        console.log("Login successful", response.data)
+        setIsLoading(false)
+        navigate('/dashboard');
+      }
+      else if(response.status === 401) {
+        setServerError("Invalid email or password. Please try again.")
+      } else {
+        setServerError("An unexpected error occurred whiele logging in")
+      }
 
-
+    }catch(error:any){
+      if (axios.isAxiosError(error)) {
+        setServerError(error.response?.data.message || "An error occurred")
+      } else {
+        setServerError("An unexpected error occurred")
+      }
+    }finally{
     setTimeout(() => {
       console.log("Login successful", values)
       setIsLoading(false)
     }, 1500)
   }
+}
 
   return (
     <div className="w-screen flex items-center justify-center min-h-screen bg-slate-50 p-4">
@@ -51,7 +72,6 @@ const Login = () => {
         <div className="bg-white p-2 rounded-lg shadow-lg">
         <Laptop className="h-8 w-8 text-black" />
         </div>
-
         </div>
 
         <Card className="border-none shadow-lg">
@@ -107,7 +127,10 @@ const Login = () => {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full" onClick={()=>{
+                  setIsLoading(true)
+                  handleLogin(form.getValues())
+                }}>
                   {isLoading ? "Logging in..." : "Login"}
                   {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>
@@ -125,7 +148,7 @@ const Login = () => {
 
         <p className="text-center mt-6 text-sm text-gray-600">
           Don't have an account?{" "}
-          <a href="#" className="text-blue-600 hover:underline">
+          <a href="/signup" className="text-blue-600 hover:underline">
             Sign up
           </a>
         </p>
